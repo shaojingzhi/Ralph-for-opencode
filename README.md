@@ -1,5 +1,7 @@
 # Ralph
 
+[English](README.md) | [简体中文](README.zh-CN.md)
+
 Ralph is an autonomous AI agent loop that runs AI coding tools repeatedly until all PRD items are complete. Each iteration is a fresh instance with clean context. Memory persists via git history, `progress.txt`, and `prd.json`.
 
 This fork keeps the Ralph workflow and adds:

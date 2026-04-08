@@ -1,0 +1,138 @@
+# Ralph
+
+[English](README.md) | [简体中文](README.zh-CN.md)
+
+Ralph 是一个自动化 AI agent 循环，会反复启动 AI 编码工具，直到 PRD 中的所有条目都完成。每一轮都是一个全新的实例，拥有干净的上下文。跨轮记忆通过 git 历史、`progress.txt` 和 `prd.json` 持续保存。
+
+这个 fork 保留了 Ralph 的工作流，并额外提供：
+
+- `ralph.sh` 中的 OpenCode 支持
+- 面向 OpenCode、Amp、Claude Code 的统一安装器
+- 可全局安装的 `prd` 与 `ralph` skills
+
+## 支持的工具
+
+- OpenCode
+- Amp
+- Claude Code
+
+## 前置要求
+
+- 已安装并完成认证的 AI 编码工具之一
+- 已安装 `jq`
+- 一个 git 项目仓库
+
+## 快速开始
+
+为 OpenCode 全局安装 skills：
+
+```bash
+./install.sh --tool opencode
+```
+
+将 skills 和 Ralph runner 一起安装到项目中：
+
+```bash
+./install.sh --tool opencode --project /path/to/your-project
+```
+
+然后在 OpenCode 中：
+
+```text
+Use the prd skill to create a PRD for adding task priorities
+Use the ralph skill to convert tasks/prd-task-priorities.md to scripts/ralph/prd.json
+```
+
+接着运行 Ralph：
+
+```bash
+cd /path/to/your-project/scripts/ralph
+./ralph.sh --tool opencode 10
+```
+
+## 安装
+
+见 [docs/INSTALL.md](docs/INSTALL.md)。
+
+## 工作流
+
+### 1. 创建 PRD
+
+使用 `prd` skill 生成详细的需求文档。
+
+示例：
+
+```text
+Use the prd skill to create a PRD for a task priority system
+```
+
+### 2. 将 PRD 转换为 `prd.json`
+
+使用 `ralph` skill 将 markdown PRD 转换成 Ralph 使用的 JSON 格式。
+
+示例：
+
+```text
+Use the ralph skill to convert tasks/prd-task-priority-system.md to scripts/ralph/prd.json
+```
+
+### 3. 运行 Ralph
+
+```bash
+./scripts/ralph/ralph.sh --tool opencode 10
+```
+
+Ralph 会：
+
+1. 从 `prd.json` 读取目标分支
+2. 选择优先级最高且 `passes: false` 的 story
+3. 只实现这一条 story
+4. 运行相关质量检查
+5. 如果检查通过则提交
+6. 更新 `prd.json`，将该 story 标记为完成
+7. 把经验追加到 `progress.txt`
+8. 持续重复，直到全部 story 完成或达到最大轮数
+
+## 关键文件
+
+| 文件 | 作用 |
+|------|------|
+| `ralph.sh` | 主循环执行器 |
+| `OPENCODE.md` | OpenCode 提示词模板 |
+| `prompt.md` | Amp 提示词模板 |
+| `CLAUDE.md` | Claude Code 提示词模板 |
+| `skills/prd/` | 生成 PRD 的 skill |
+| `skills/ralph/` | 把 PRD 转成 `prd.json` 的 skill |
+| `install.sh` | 统一安装器 |
+| `install-opencode.sh` | OpenCode 兼容安装入口 |
+| `prd.json.example` | Ralph 任务文件示例 |
+
+## OpenCode 说明
+
+- `ralph.sh` 会尽量在 git 仓库根目录运行 OpenCode
+- OpenCode 执行前会隔离嵌套桌面会话环境变量，避免 `Session not found`
+- 默认 OpenCode 模型为 `codexzh/gpt-5.4`
+- 默认 OpenCode agent 为 `build`
+- 完成判定通过匹配 `<promise>COMPLETE</promise>`
+
+## 为什么 Ralph 有效
+
+### 每轮都是全新上下文
+
+每一轮都会启动一个新的 agent 实例。跨轮保留的记忆只有：
+
+- git 历史
+- `progress.txt`
+- `prd.json`
+
+### Story 应该足够小
+
+每个 story 都应该小到可以在单轮中完成。过大的 story 应按依赖关系或分层拆分。
+
+### 反馈闭环很重要
+
+Ralph 依赖类型检查、测试以及 UI story 的浏览器验证等反馈闭环。
+
+## 兼容性说明
+
+OpenCode 团队可以定义本地 `reviewer` 角色，但它通常应作为主编码 agent 的子代理使用，而不是直接通过 `opencode run --agent reviewer` 运行。
