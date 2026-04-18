@@ -72,7 +72,7 @@ Each story needs:
 
 Each story should be small enough to implement in one focused session.
 
-For UI stories always include Verify in browser using dev-browser skill in acceptance criteria.
+For UI stories always include Verify in browser using available browser tooling in acceptance criteria.
 
 ### 4. Functional Requirements
 Numbered list of specific functionalities.
