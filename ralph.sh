@@ -2,10 +2,15 @@
 
 set -euo pipefail
 
-TOOL="opencode"
+TOOL="codex"
 MAX_ITERATIONS=10
 OPENCODE_AGENT="build"
 OPENCODE_MODEL="${OPENCODE_MODEL:-codexzh/gpt-5.4}"
+CODEX_MODEL="${CODEX_MODEL:-}"
+CODEX_SANDBOX_MODE="${RALPH_CODEX_SANDBOX:-workspace-write}"
+CODEX_APPROVAL_POLICY="${RALPH_CODEX_APPROVAL:-never}"
+CODEX_PROFILE="${RALPH_CODEX_PROFILE:-}"
+MODEL_OVERRIDE=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -25,6 +30,38 @@ while [[ $# -gt 0 ]]; do
       OPENCODE_AGENT="${1#*=}"
       shift
       ;;
+    --model)
+      MODEL_OVERRIDE="$2"
+      shift 2
+      ;;
+    --model=*)
+      MODEL_OVERRIDE="${1#*=}"
+      shift
+      ;;
+    --codex-sandbox)
+      CODEX_SANDBOX_MODE="$2"
+      shift 2
+      ;;
+    --codex-sandbox=*)
+      CODEX_SANDBOX_MODE="${1#*=}"
+      shift
+      ;;
+    --codex-approval)
+      CODEX_APPROVAL_POLICY="$2"
+      shift 2
+      ;;
+    --codex-approval=*)
+      CODEX_APPROVAL_POLICY="${1#*=}"
+      shift
+      ;;
+    --codex-profile)
+      CODEX_PROFILE="$2"
+      shift 2
+      ;;
+    --codex-profile=*)
+      CODEX_PROFILE="${1#*=}"
+      shift
+      ;;
     *)
       if [[ "$1" =~ ^[0-9]+$ ]]; then
         MAX_ITERATIONS="$1"
@@ -34,8 +71,16 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [[ "$TOOL" != "amp" && "$TOOL" != "claude" && "$TOOL" != "opencode" ]]; then
-  echo "Error: Invalid tool '$TOOL'. Must be 'amp', 'claude', or 'opencode'."
+if [ -n "$MODEL_OVERRIDE" ]; then
+  if [[ "$TOOL" == "opencode" ]]; then
+    OPENCODE_MODEL="$MODEL_OVERRIDE"
+  elif [[ "$TOOL" == "codex" ]]; then
+    CODEX_MODEL="$MODEL_OVERRIDE"
+  fi
+fi
+
+if [[ "$TOOL" != "amp" && "$TOOL" != "claude" && "$TOOL" != "codex" && "$TOOL" != "opencode" ]]; then
+  echo "Error: Invalid tool '$TOOL'. Must be 'amp', 'claude', 'codex', or 'opencode'."
   exit 1
 fi
 
@@ -104,6 +149,31 @@ run_claude() {
   ) | tee /dev/stderr
 }
 
+run_codex() {
+  local codex_args
+  local exec_args
+
+  codex_args=(--ask-for-approval "$CODEX_APPROVAL_POLICY")
+  exec_args=(exec --cd "$PROJECT_DIR" --sandbox "$CODEX_SANDBOX_MODE" --color never)
+
+  if [ -n "$CODEX_MODEL" ]; then
+    exec_args+=(--model "$CODEX_MODEL")
+  fi
+
+  if [ -n "$CODEX_PROFILE" ]; then
+    exec_args+=(--profile "$CODEX_PROFILE")
+  fi
+
+  env \
+    -u CODEX_CI \
+    -u CODEX_INTERNAL_ORIGINATOR_OVERRIDE \
+    -u CODEX_SANDBOX \
+    -u CODEX_SANDBOX_NETWORK_DISABLED \
+    -u CODEX_SHELL \
+    -u CODEX_THREAD_ID \
+    codex "${codex_args[@]}" "${exec_args[@]}" - < "$SCRIPT_DIR/CODEX.md" 2>&1 | tee /dev/stderr
+}
+
 run_opencode() {
   local prompt
   prompt="$(<"$SCRIPT_DIR/OPENCODE.md")"
@@ -139,6 +209,8 @@ for i in $(seq 1 "$MAX_ITERATIONS"); do
     OUTPUT="$(run_amp)" || true
   elif [[ "$TOOL" == "claude" ]]; then
     OUTPUT="$(run_claude)" || true
+  elif [[ "$TOOL" == "codex" ]]; then
+    OUTPUT="$(run_codex)" || true
   else
     OUTPUT="$(run_opencode)" || true
   fi

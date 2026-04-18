@@ -76,7 +76,7 @@ Always include:
 
 Include when relevant:
 - Tests pass
-- Verify in browser using dev-browser skill
+- Verify in browser using available browser tooling
 
 ---
 

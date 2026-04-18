@@ -6,12 +6,14 @@ Ralph 是一个自动化 AI agent 循环，会反复启动 AI 编码工具，直
 
 这个 fork 保留了 Ralph 的工作流，并额外提供：
 
+- `ralph.sh` 中的 Codex CLI 支持
 - `ralph.sh` 中的 OpenCode 支持
-- 面向 OpenCode、Amp、Claude Code 的统一安装器
+- 面向 Codex、OpenCode、Amp、Claude Code 的统一安装器
 - 可全局安装的 `prd` 与 `ralph` skills
 
 ## 支持的工具
 
+- Codex CLI
 - OpenCode
 - Amp
 - Claude Code
@@ -24,19 +26,19 @@ Ralph 是一个自动化 AI agent 循环，会反复启动 AI 编码工具，直
 
 ## 快速开始
 
-为 OpenCode 全局安装 skills：
+为 Codex 全局安装 skills：
 
 ```bash
-./install.sh --tool opencode
+./install.sh --tool codex
 ```
 
 将 skills 和 Ralph runner 一起安装到项目中：
 
 ```bash
-./install.sh --tool opencode --project /path/to/your-project
+./install.sh --tool codex --project /path/to/your-project
 ```
 
-然后在 OpenCode 中：
+然后在 Codex 中：
 
 ```text
 Use the prd skill to create a PRD for adding task priorities
@@ -47,12 +49,17 @@ Use the ralph skill to convert tasks/prd-task-priorities.md to scripts/ralph/prd
 
 ```bash
 cd /path/to/your-project/scripts/ralph
-./ralph.sh --tool opencode 10
+./ralph.sh --tool codex 10
 ```
 
 ## 安装
 
 见 [docs/INSTALL.md](docs/INSTALL.md)。
+
+## 演示
+
+- 最小可跑示例：`examples/minimal/prd.json`
+- 分步演示流程：`docs/DEMO.md`
 
 ## 工作流
 
@@ -79,7 +86,7 @@ Use the ralph skill to convert tasks/prd-task-priority-system.md to scripts/ralp
 ### 3. 运行 Ralph
 
 ```bash
-./scripts/ralph/ralph.sh --tool opencode 10
+./scripts/ralph/ralph.sh --tool codex 10
 ```
 
 Ralph 会：
@@ -98,14 +105,26 @@ Ralph 会：
 | 文件 | 作用 |
 |------|------|
 | `ralph.sh` | 主循环执行器 |
+| `CODEX.md` | Codex CLI 提示词模板 |
 | `OPENCODE.md` | OpenCode 提示词模板 |
 | `prompt.md` | Amp 提示词模板 |
 | `CLAUDE.md` | Claude Code 提示词模板 |
 | `skills/prd/` | 生成 PRD 的 skill |
 | `skills/ralph/` | 把 PRD 转成 `prd.json` 的 skill |
 | `install.sh` | 统一安装器 |
+| `install-codex.sh` | Codex 兼容安装入口 |
 | `install-opencode.sh` | OpenCode 兼容安装入口 |
 | `prd.json.example` | Ralph 任务文件示例 |
+
+## Codex 说明
+
+- `ralph.sh` 会尽量在 git 仓库根目录运行 `codex exec`。
+- 默认 Codex sandbox 为 `workspace-write`。
+- 默认 Codex approval policy 为 `never`，更适合非交互式循环。
+- Codex 默认使用你本机配置的模型，也可以通过 `--model` 或 `CODEX_MODEL` 覆盖。
+- 可以用 `RALPH_CODEX_SANDBOX` 或 `--codex-sandbox` 覆盖 sandbox。
+- 可以用 `RALPH_CODEX_APPROVAL` 或 `--codex-approval` 覆盖 approval policy。
+- 完成判定通过匹配 `<promise>COMPLETE</promise>`。
 
 ## OpenCode 说明
 

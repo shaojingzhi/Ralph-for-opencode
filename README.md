@@ -6,12 +6,14 @@ Ralph is an autonomous AI agent loop that runs AI coding tools repeatedly until 
 
 This fork keeps the Ralph workflow and adds:
 
+- Codex CLI support in `ralph.sh`
 - OpenCode support in `ralph.sh`
-- a unified installer for OpenCode, Amp, and Claude Code
+- a unified installer for Codex, OpenCode, Amp, and Claude Code
 - globally installable `prd` and `ralph` skills
 
 ## Supported tools
 
+- Codex CLI
 - OpenCode
 - Amp
 - Claude Code
@@ -24,19 +26,19 @@ This fork keeps the Ralph workflow and adds:
 
 ## Quick start
 
-Install skills globally for OpenCode:
+Install skills globally for Codex:
 
 ```bash
-./install.sh --tool opencode
+./install.sh --tool codex
 ```
 
 Install skills and the Ralph runner into a project:
 
 ```bash
-./install.sh --tool opencode --project /path/to/your-project
+./install.sh --tool codex --project /path/to/your-project
 ```
 
-Then in OpenCode:
+Then in Codex:
 
 ```text
 Use the prd skill to create a PRD for adding task priorities
@@ -47,12 +49,17 @@ Then run Ralph:
 
 ```bash
 cd /path/to/your-project/scripts/ralph
-./ralph.sh --tool opencode 10
+./ralph.sh --tool codex 10
 ```
 
 ## Installation
 
 See [docs/INSTALL.md](docs/INSTALL.md).
+
+## Demo
+
+- Minimal runnable example: `examples/minimal/prd.json`
+- Step-by-step walkthrough: [docs/DEMO.md](docs/DEMO.md)
 
 ## Workflow
 
@@ -79,7 +86,7 @@ Use the ralph skill to convert tasks/prd-task-priority-system.md to scripts/ralp
 ### 3. Run Ralph
 
 ```bash
-./scripts/ralph/ralph.sh --tool opencode 10
+./scripts/ralph/ralph.sh --tool codex 10
 ```
 
 Ralph will:
@@ -98,14 +105,26 @@ Ralph will:
 | File | Purpose |
 |------|---------|
 | `ralph.sh` | Main loop runner |
+| `CODEX.md` | Prompt template for Codex CLI |
 | `OPENCODE.md` | Prompt template for OpenCode |
 | `prompt.md` | Prompt template for Amp |
 | `CLAUDE.md` | Prompt template for Claude Code |
 | `skills/prd/` | Skill for generating PRDs |
 | `skills/ralph/` | Skill for converting PRDs to `prd.json` |
 | `install.sh` | Unified installer for skills and project files |
+| `install-codex.sh` | Compatibility wrapper for Codex installs |
 | `install-opencode.sh` | Compatibility wrapper for OpenCode installs |
 | `prd.json.example` | Example Ralph task file |
+
+## Codex notes
+
+- `ralph.sh` runs `codex exec` from the git repo root when available.
+- The default Codex sandbox is `workspace-write`.
+- The default Codex approval policy is `never`, which is better for non-interactive loops.
+- Codex uses your configured default model unless you pass `--model` or set `CODEX_MODEL`.
+- You can override the sandbox with `RALPH_CODEX_SANDBOX` or `--codex-sandbox`.
+- You can override approval with `RALPH_CODEX_APPROVAL` or `--codex-approval`.
+- Completion is detected by matching `<promise>COMPLETE</promise>`.
 
 ## OpenCode notes
 

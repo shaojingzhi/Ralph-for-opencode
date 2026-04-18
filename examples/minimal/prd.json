@@ -1,0 +1,21 @@
+{
+  "project": "Ralph Demo",
+  "branchName": "ralph/demo-add-changelog",
+  "description": "Minimal runnable demo that asks Ralph to add a starter CHANGELOG.md file.",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Create a starter changelog",
+      "description": "As a maintainer, I want a starter CHANGELOG.md so that the repository has a clear place to track future releases.",
+      "acceptanceCriteria": [
+        "Add CHANGELOG.md at the repository root",
+        "CHANGELOG.md contains a '# Changelog' heading",
+        "CHANGELOG.md contains a '## Unreleased' section",
+        "Run 'test -f CHANGELOG.md' successfully"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": "This is a safe first-run example for verifying the Ralph loop end to end."
+    }
+  ]
+}

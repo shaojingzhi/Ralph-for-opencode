@@ -3,19 +3,20 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-TOOL="opencode"
+TOOL="codex"
 TARGET_PROJECT=""
 
 usage() {
   cat <<EOF
-Usage: ./install.sh [--tool opencode|amp|claude] [--project /path/to/project]
+Usage: ./install.sh [--tool codex|opencode|amp|claude] [--project /path/to/project]
 
 Installs Ralph skills for the selected tool.
 Optionally installs Ralph runner files into a target project under scripts/ralph/.
 
 Examples:
+  ./install.sh --tool codex
+  ./install.sh --tool codex --project /path/to/my-app
   ./install.sh --tool opencode
-  ./install.sh --tool opencode --project /path/to/my-app
   ./install.sh --tool amp
   ./install.sh --tool claude
 EOF
@@ -31,6 +32,7 @@ copy_dir() {
 
 skill_install_dir() {
   case "$TOOL" in
+    codex) printf '%s' "${CODEX_HOME:-$HOME/.codex}/skills" ;;
     opencode) printf '%s' "$HOME/.config/opencode/skills" ;;
     amp) printf '%s' "$HOME/.config/amp/skills" ;;
     claude) printf '%s' "$HOME/.claude/skills" ;;
@@ -65,6 +67,7 @@ install_project_files() {
 
   mkdir -p "$ralph_dir"
   cp "$SCRIPT_DIR/ralph.sh" "$ralph_dir/ralph.sh"
+  cp "$SCRIPT_DIR/CODEX.md" "$ralph_dir/CODEX.md"
   cp "$SCRIPT_DIR/OPENCODE.md" "$ralph_dir/OPENCODE.md"
   cp "$SCRIPT_DIR/prompt.md" "$ralph_dir/prompt.md"
   cp "$SCRIPT_DIR/CLAUDE.md" "$ralph_dir/CLAUDE.md"
@@ -109,8 +112,8 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [[ "$TOOL" != "opencode" && "$TOOL" != "amp" && "$TOOL" != "claude" ]]; then
-  echo "Error: Invalid tool '$TOOL'. Must be 'opencode', 'amp', or 'claude'."
+if [[ "$TOOL" != "codex" && "$TOOL" != "opencode" && "$TOOL" != "amp" && "$TOOL" != "claude" ]]; then
+  echo "Error: Invalid tool '$TOOL'. Must be 'codex', 'opencode', 'amp', or 'claude'."
   exit 1
 fi
 
